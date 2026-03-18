@@ -1,0 +1,67 @@
+# CC-Switch 配置文件
+# Claude Code 无限询问功能开关配置
+
+infinite_mode:
+  enabled: true
+  
+  # 安全限制
+  max_iterations: 10000
+  cost_limit_usd: 10000.0
+  
+  # 完成标记（检测到这些标记会停止循环）
+  completion_markers:
+    - "[TASK_COMPLETE]"
+    - "[DONE]"
+    - "任务已完成"
+    - "[FINISHED]"
+  
+  # 自动继续的关键字（检测到这些会继续循环）
+  continue_keywords:
+    - "继续"
+    - "下一步"
+    - "未完成"
+    - "还需要"
+  
+  # Hook配置
+  hooks:
+    pre_tool_use:
+      enabled: true
+      read_plan: true
+      plan_file: "task_plan.md"
+    
+    stop:
+      enabled: true
+      check_completion: true
+      auto_continue: true
+
+# 任务规划文件配置
+planning:
+  files:
+    - task_plan.md      # 任务规划
+    - findings.md       # 研究发现
+    - progress.md       # 进度记录
+  
+  auto_update: true
+  backup_interval: 5   # 每5次迭代备份一次
+
+# 子代理配置
+subagents:
+  auto_recovery: true  # 自动恢复子代理会话
+  max_parallel: 3      # 最大并行子代理数
+  
+  # 自定义工作流
+  workflows:
+    code_review:
+      - code-reviewer
+      - security-auditor
+    full_stack:
+      - backend-dev
+      - frontend-dev
+      - tester
+
+# 成本控制
+cost_control:
+  warning_threshold: 5.0   # $5警告
+  hard_limit: 20.0         # $20硬限制
+  cheap_model_for_simple: true
+  track_usage: true

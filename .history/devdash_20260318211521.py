@@ -23,40 +23,6 @@ if sys.platform == 'win32':
 
 
 VERSION = "1.0.0"
-CONFIG_FILE = Path('.devdash/config.json')
-
-DEFAULT_CONFIG = {
-    'exclude_dirs': ['.git', '__pycache__', 'node_modules', '.venv', 'venv', '.devdash'],
-    'large_file_threshold_mb': 1.0,
-    'max_recent_commits': 3,
-    'todo_priorities': ['high', 'medium', 'low']
-}
-
-
-def load_config():
-    """加载配置文件"""
-    if CONFIG_FILE.exists():
-        try:
-            with open(CONFIG_FILE, 'r', encoding='utf-8') as f:
-                config = json.load(f)
-                # 合并默认配置
-                merged_config = DEFAULT_CONFIG.copy()
-                merged_config.update(config)
-                return merged_config
-        except:
-            return DEFAULT_CONFIG.copy()
-    return DEFAULT_CONFIG.copy()
-
-
-def save_config(config):
-    """保存配置文件"""
-    CONFIG_FILE.parent.mkdir(exist_ok=True)
-    with open(CONFIG_FILE, 'w', encoding='utf-8') as f:
-        json.dump(config, f, indent=2, ensure_ascii=False)
-
-
-# 全局配置
-CONFIG = load_config()
 
 
 def create_parser():
@@ -108,66 +74,17 @@ def create_parser():
 
 def show_overview():
     """显示项目概览"""
-    print("\n" + "=" * 60)
-    print("  DevDash - 开发者智能仪表盘 v" + VERSION)
     print("=" * 60)
-
-    print(f"\n📁 当前目录: {Path.cwd()}")
-
-    # Git 状态概览
-    if is_git_repo():
-        branch = get_current_branch()
-        unstaged, staged, untracked = get_uncommitted_count()
-        total_changes = unstaged + staged + untracked
-
-        print(f"\n📍 Git 分支: {branch}")
-        if total_changes > 0:
-            print(f"📝 未提交: {total_changes} 个文件")
-        else:
-            print("✅ 工作区干净")
-    else:
-        print("\n⚠️  不是 Git 仓库")
-
-    # 代码统计概览
-    files = get_all_files()
-    total_lines = 0
-    for filepath in files:
-        total_lines += get_file_stats(filepath)
-
-    print(f"\n📊 代码统计:")
-    print(f"  • 文件数: {len(files)}")
-    print(f"  • 代码行: {total_lines:,}")
-
-    # TODO 概览
-    todos = scan_todos()
-    high_priority = len([t for t in todos if t['priority'] == 'high'])
-
-    print(f"\n📋 TODO 状态:")
-    if high_priority > 0:
-        print(f"  ⚠️  {high_priority} 个高优先级待处理")
-    print(f"  • 总计: {len(todos)} 个 TODO")
-
-    # 健康评分
-    if is_git_repo():
-        score = 100
-        unstaged, staged, untracked = get_uncommitted_count()
-        total_changes = unstaged + staged + untracked
-        if total_changes > 0:
-            score -= min(total_changes * 2, 20)
-        if high_priority > 0:
-            score -= min(high_priority * 5, 20)
-
-        print(f"\n💚 健康评分: {max(score, 0)}/100")
-
-    print("\n" + "-" * 60)
-    print("可用的命令:")
+    print("  DevDash - 开发者智能仪表盘")
+    print("=" * 60)
+    print(f"\n当前目录: {Path.cwd()}")
+    print("\n可用的命令:")
     print("  devdash git     - 查看Git状态")
     print("  devdash stats   - 查看代码统计")
     print("  devdash todo    - 查看TODO列表")
     print("  devdash log     - 管理开发日志")
     print("  devdash health  - 项目健康检查")
-    print("\n使用 devdash --help 查看详细帮助")
-    print("=" * 60)
+    print("\n使用 --help 查看详细帮助信息")
 
 
 def run_git_command(cmd):
@@ -331,7 +248,7 @@ def get_file_stats(filepath):
 
 def get_all_files():
     """获取所有文件（排除隐藏文件和特定目录）"""
-    exclude_dirs = set(CONFIG.get('exclude_dirs', DEFAULT_CONFIG['exclude_dirs']))
+    exclude_dirs = {'.git', '__pycache__', 'node_modules', '.venv', 'venv', '.devdash'}
     files = []
 
     for root, dirs, filenames in os.walk('.'):
@@ -680,156 +597,6 @@ def show_week_log():
     print("\n" + "=" * 60)
 
 
-def check_project_health():
-    """项目健康检查"""
-    print("\n" + "=" * 60)
-    print("  项目健康检查")
-    print("=" * 60)
-
-    score = 100
-    issues = []
-    warnings = []
-    good_points = []
-
-    # 1. 检查是否有未提交的更改
-    print("\n🔍 检查 Git 状态...")
-    if not is_git_repo():
-        print("  ⚠️  不是Git仓库")
-        warnings.append("项目未初始化Git仓库")
-        score -= 10
-    else:
-        unstaged, staged, untracked = get_uncommitted_count()
-        total_changes = unstaged + staged + untracked
-
-        if total_changes > 0:
-            print(f"  ⚠️  有 {total_changes} 个未提交的文件")
-            issues.append(f"{total_changes} 个文件未提交")
-            if total_changes > 10:
-                score -= 15
-            else:
-                score -= 5
-        else:
-            print("  ✅ 工作区干净")
-            good_points.append("工作区干净")
-
-        # 2. 检查是否有未推送的提交
-        print("\n🔍 检查远程同步...")
-        sync_status = get_sync_status()
-        if "领先" in sync_status and "待推送" in sync_status:
-            print(f"  ⚠️  {sync_status}")
-            warnings.append("有未推送的提交")
-            score -= 5
-        elif "已同步" in sync_status:
-            print("  ✅ 已与远程同步")
-            good_points.append("已与远程同步")
-        else:
-            print(f"  ℹ️  {sync_status}")
-
-    # 3. 检查大型文件
-    print("\n🔍 检查大型文件...")
-    large_files = []
-    files = get_all_files()
-    threshold = CONFIG.get('large_file_threshold_mb', 1.0) * 1024 * 1024
-
-    for filepath in files:
-        try:
-            size = os.path.getsize(filepath)
-            if size > threshold:  # 使用配置的阈值
-                large_files.append((filepath, size))
-        except:
-            continue
-
-    if large_files:
-        large_files.sort(key=lambda x: x[1], reverse=True)
-        print(f"  ⚠️  发现 {len(large_files)} 个大文件（>1MB）:")
-        for filepath, size in large_files[:3]:
-            size_mb = size / (1024 * 1024)
-            display_path = filepath.lstrip('./\\')
-            if len(display_path) > 50:
-                display_path = display_path[:47] + '...'
-            print(f"    {display_path:50} {size_mb:6.1f} MB")
-        if len(large_files) > 3:
-            print(f"    ... 还有 {len(large_files) - 3} 个大文件")
-        warnings.append(f"{len(large_files)} 个大文件（>1MB）")
-        score -= 10
-    else:
-        print("  ✅ 没有大文件（>1MB）")
-        good_points.append("无大文件")
-
-    # 4. 检查TODO数量
-    print("\n🔍 检查 TODO 状态...")
-    todos = scan_todos()
-    high_priority = len([t for t in todos if t['priority'] == 'high'])
-
-    if high_priority > 0:
-        print(f"  ⚠️  有 {high_priority} 个高优先级 TODO")
-        issues.append(f"{high_priority} 个高优先级TODO待处理")
-        score -= min(high_priority * 5, 20)
-    elif len(todos) > 10:
-        print(f"  ℹ️  有 {len(todos)} 个 TODO")
-        warnings.append(f"{len(todos)} 个TODO待处理")
-        score -= 5
-    else:
-        print(f"  ✅ TODO 数量正常 ({len(todos)} 个)")
-        good_points.append("TODO数量正常")
-
-    # 5. 检查代码统计
-    print("\n🔍 检查代码规模...")
-    total_lines = 0
-    for filepath in files:
-        total_lines += get_file_stats(filepath)
-
-    print(f"  ℹ️  总代码行数: {total_lines:,}")
-    if total_lines > 100000:
-        warnings.append("代码库较大（>10万行）")
-        score -= 5
-
-    # 健康评分
-    print("\n" + "=" * 60)
-    print(f"  健康评分: {max(score, 0)}/100")
-    print("=" * 60)
-
-    # 总结
-    if issues:
-        print("\n❌ 需要处理的问题:")
-        for issue in issues:
-            print(f"  • {issue}")
-
-    if warnings:
-        print("\n⚠️  注意事项:")
-        for warning in warnings:
-            print(f"  • {warning}")
-
-    if good_points:
-        print("\n✅ 良好状态:")
-        for point in good_points:
-            print(f"  • {point}")
-
-    # 建议
-    print("\n💡 改进建议:")
-    if issues:
-        for issue in issues:
-            if "未提交" in issue:
-                print("  • 建议及时提交更改以避免丢失工作")
-            elif "TODO" in issue:
-                print("  • 建议优先处理高优先级的TODO")
-    if warnings:
-        for warning in warnings:
-            if "未推送" in warning:
-                print("  • 建议定期推送代码到远程仓库")
-            elif "大文件" in warning:
-                print("  • 考虑将大文件添加到 .gitignore 或使用 Git LFS")
-
-    if score >= 90:
-        print("  • 项目状态良好，继续保持！")
-    elif score >= 70:
-        print("  • 项目状态一般，建议处理上述问题")
-    else:
-        print("  • 项目需要改进，请优先处理上述问题")
-
-    print("\n" + "=" * 60)
-
-
 def main():
     """主函数"""
     parser = create_parser()
@@ -865,7 +632,8 @@ def main():
                 print("请提供日志内容或使用 --today/--week 选项")
 
         elif args.command == 'health':
-            check_project_health()
+            print("项目健康检查 - 开发中...")
+            # TODO: 阶段6实现
 
     except KeyboardInterrupt:
         print("\n操作已取消")

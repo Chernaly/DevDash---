@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cd \"C:/Users/27929/Desktop/git_learning/3.18\" && mkdir -p .devdash)",
+      "Bash(cd \"C:/Users/27929/Desktop/git_learning/3.18\" && python devdash.py --help)",
+      "Bash(cd \"C:/Users/27929/Desktop/git_learning/3.18\" && python devdash.py --version)",
+      "Bash(cd \"C:/Users/27929/Desktop/git_learning/3.18\" && python devdash.py)",
+      "Bash(cd \"C:/Users/27929/Desktop/git_learning/3.18\" && python devdash.py git)",
+      "Bash(cd \"C:/Users/27929/Desktop/git_learning/3.18\" && git init && git config user.name \"DevDash\" && git config user.email \"devdash@test.com\")",
+      "Bash(cd \"C:/Users/27929/Desktop/git_learning/3.18\" && git add devdash.py && git commit -m \"Initial commit: DevDash project skeleton\")",
+      "Bash(cd \"C:/Users/27929/Desktop/git_learning/3.18\" && git add task_plan.md && git commit -m \"Add task plan document\")",
+      "Bash(cd \"C:/Users/27929/Desktop/git_learning/3.18\" && python devdash.py stats)",
+      "Bash(cd \"C:/Users/27929/Desktop/git_learning/3.18\" && python devdash.py todo)",
+      "Bash(cd \"C:/Users/27929/Desktop/git_learning/3.18\" && python devdash.py todo --file test.py)",
+      "Bash(cd \"C:/Users/27929/Desktop/git_learning/3.18\" && python devdash.py todo --priority high)",
+      "Bash(cd \"C:/Users/27929/Desktop/git_learning/3.18\" && python devdash.py log \"开始开发DevDash工具，完成项目骨架\")",
+      "Bash(cd \"C:/Users/27929/Desktop/git_learning/3.18\" && python devdash.py log \"完成Git状态模块\")",
+      "Bash(cd \"C:/Users/27929/Desktop/git_learning/3.18\" && python devdash.py log --today)",
+      "Bash(cd \"C:/Users/27929/Desktop/git_learning/3.18\" && python devdash.py health)"
+    ]
+  }
+}
